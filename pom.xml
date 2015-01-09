@@ -33,6 +33,7 @@
         <module>hazelcast</module>
 		<module>ocpjp</module>
 		<module>rest</module>
+		<module>java8</module>
 	</modules>
 	
 	<build>
