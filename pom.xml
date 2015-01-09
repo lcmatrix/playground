@@ -32,6 +32,7 @@
 	<modules>
         <module>hazelcast</module>
 		<module>ocpjp</module>
+		<module>rest</module>
 	</modules>
 	
 	<build>
