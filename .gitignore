@@ -1,5 +1,6 @@
 *.class
 target
+database
 
 # Package Files #
 *.jar
