@@ -18,7 +18,8 @@
 	<modules>
 		<module>rest-server</module>
 		<module>rest-client</module>
-	</modules>
+        <module>rest-common</module>
+    </modules>
 	
 	<properties>
 		<jersey.version>1.17.1</jersey.version>

@@ -2,7 +2,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import javax.xml.bind.annotation.XmlRootElement;
 
 @Path("message")
 public class MessageResource {
@@ -14,15 +13,10 @@ public class MessageResource {
     }
 
     @GET
-    @Produces(MediaType.TEXT_XML)
-    public Response messageAsXml() {
-        Response response = new Response();
-        response.message = "hallo xml";
+    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
+    public MessageOne messageAsXml() {
+        MessageOne response = new MessageOne();
+        response.setMessage("hallo xml");
         return response;
-    }
-
-    @XmlRootElement
-    class Response {
-        private String message;
     }
 }

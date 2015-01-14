@@ -34,8 +34,8 @@
 		<module>ocpjp</module>
 		<module>rest</module>
 		<module>java8</module>
-	</modules>
-	
+	        <module>neo4j</module>
+    </modules>
 	<build>
 		<plugins>
 			<plugin>
