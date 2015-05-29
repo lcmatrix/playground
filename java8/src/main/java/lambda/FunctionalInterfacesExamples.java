@@ -8,7 +8,7 @@ package lambda;
  */
 public class FunctionalInterfacesExamples {
     public static final void main(String args[]) {
-        InterfaceOne i = (y,z) -> {
+        MyInterface i = (y,z) -> {
             return y + z;
         };
         System.out.println(i.add(5, 6));
