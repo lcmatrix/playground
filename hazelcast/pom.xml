@@ -20,8 +20,8 @@
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
+					<source>1.8</source>
+					<target>1.8</target>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -40,7 +40,7 @@
 		<dependency>
 			<groupId>com.hazelcast</groupId>
 			<artifactId>hazelcast</artifactId>
-			<version>2.4</version>
+			<version>3.4.2</version>
 		</dependency>
 	</dependencies>
 </project>

@@ -18,5 +18,6 @@ public class FirstHazelcast {
         IMap<Object, Object> map = hazelcastInstance.getMap("default");
         map.put("test", "hallo");
         System.out.println(map.getLocalMapStats().getBackupEntryMemoryCost());
+        hazelcastInstance.shutdown();
     }
 }
