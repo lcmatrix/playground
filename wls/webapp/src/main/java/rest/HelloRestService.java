@@ -3,6 +3,12 @@
  */
 package rest;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import javax.jms.*;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
@@ -12,6 +18,13 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("/hello")
 public class HelloRestService {
+
+    @JMSConnectionFactory("jms/ConnectionFactory")
+    @Resource(lookup="jms/ConnectionFactory")
+    private ConnectionFactory connectionFactory;
+
+    @Resource(lookup="jms/Queue0")
+    private Queue queue;
 
     /**
      * Simple method which returns "Hello REST" as String.
@@ -57,5 +70,38 @@ public class HelloRestService {
     @Consumes(MediaType.TEXT_PLAIN)
     public void doPostString(String data) {
         System.out.println("Received string: " + data);
+        Connection connection = null;
+        try {
+            connection = connectionFactory.createConnection();
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            MessageProducer producer = session.createProducer(this.queue);
+            TextMessage message = session.createTextMessage(data);
+            producer.send(message);
+        } catch (JMSException e) {
+            e.printStackTrace();
+        } finally {
+            if(connection != null) {
+                try {
+                    connection.close();
+                } catch (JMSException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public void setConnectionFactory(ConnectionFactory connectionFactory) {
+        this.connectionFactory = connectionFactory;
+    }
+
+    public void setQueue(Queue queue) {
+        this.queue = queue;
+    }
+
+    @PostConstruct
+    private void setup() throws NamingException {
+        Context context = new InitialContext();
+        this.connectionFactory = (ConnectionFactory) context.lookup("jms/ConnectionFactory");
+        this.queue = (Queue) context.lookup("jms/Queue0");
     }
 }
