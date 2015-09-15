@@ -5,6 +5,7 @@ package rest;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.ejb.Stateless;
 import javax.jms.*;
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -16,14 +17,16 @@ import javax.ws.rs.core.MediaType;
 /**
  * REST Service.
  */
+@Stateless
 @Path("/hello")
 public class HelloRestService {
 
-    @JMSConnectionFactory("jms/ConnectionFactory")
-    @Resource(lookup="jms/ConnectionFactory")
+    @Resource(mappedName="jms/ConnectionFactory", type = javax.jms.ConnectionFactory.class,
+    name = "jms.ConnectionFactory")
     private ConnectionFactory connectionFactory;
 
-    @Resource(lookup="jms/Queue0")
+    @Resource(mappedName="jms/Queue0", type = javax.jms.Queue.class,
+    name = "jms.Queue0")
     private Queue queue;
 
     /**
@@ -71,21 +74,29 @@ public class HelloRestService {
     public void doPostString(String data) {
         System.out.println("Received string: " + data);
         Connection connection = null;
+        Session session = null;
         try {
             connection = connectionFactory.createConnection();
-            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            connection.start();
             MessageProducer producer = session.createProducer(this.queue);
             TextMessage message = session.createTextMessage(data);
+            // expire after one hour
+            message.setJMSExpiration(3600000);
+            producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
             producer.send(message);
         } catch (JMSException e) {
             e.printStackTrace();
         } finally {
-            if(connection != null) {
-                try {
-                    connection.close();
-                } catch (JMSException e) {
-                    e.printStackTrace();
+            try {
+                if (session != null) {
+                    session.close();
                 }
+                if(connection != null) {
+                    connection.close();
+                }
+            } catch (JMSException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -98,10 +109,11 @@ public class HelloRestService {
         this.queue = queue;
     }
 
-    @PostConstruct
-    private void setup() throws NamingException {
+    // not used anymore, using dependency injection
+    //@PostConstruct
+    /*private void setup() throws NamingException {
         Context context = new InitialContext();
         this.connectionFactory = (ConnectionFactory) context.lookup("jms/ConnectionFactory");
         this.queue = (Queue) context.lookup("jms/Queue0");
-    }
+    }*/
 }

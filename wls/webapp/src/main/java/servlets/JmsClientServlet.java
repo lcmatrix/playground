@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Enumeration;
 
 /**
  * Servlet which reads JMS Messages.
@@ -23,10 +24,11 @@ import java.io.PrintWriter;
 @WebServlet(name = "JmsClientServlet", urlPatterns = "/jmsservlet")
 public class JmsClientServlet extends HttpServlet {
 
-    @Resource(lookup = "jms/ConnectionFactory")
+    @Resource(mappedName = "jms/ConnectionFactory", type = javax.jms.ConnectionFactory.class,
+    name = "jms.ConnectionFactory")
     private ConnectionFactory connectionFactory;
 
-    @Resource(lookup = "jms/Queue0")
+    @Resource(mappedName = "jms/Queue0", type = javax.jms.Queue.class, name = "jms.Queue0")
     private Queue queue;
 
     @Override
@@ -35,26 +37,37 @@ public class JmsClientServlet extends HttpServlet {
         out.write("<html><head></head><body><p>Folgende Nachrichten wurden empfangen:</p>");
 
         Connection connection = null;
+        Session session = null;
         try {
             connection = connectionFactory.createConnection();
-            Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+            session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+            connection.start();
+            QueueBrowser browser = session.createBrowser(queue);
+            Enumeration enumeration = browser.getEnumeration();
             MessageConsumer consumer = session.createConsumer(queue);
-            for(int i = 0; i < 3; i++) {
-                TextMessage message = (TextMessage) consumer.receive();
-                if (message != null) {
-                    out.write("Message: " + message.getText() + "<br/>");
-                    System.out.println("read jms message: " + message.getText());
+            while(true) {
+                TextMessage message = (TextMessage) consumer.receive(1000);
+                if (message == null) {
+                    // no message received, stop receiving
+                    break;
                 }
+                out.write("Message: " + message.getText() + "<br/>");
+                System.out.println("read jms message [ID: " + message.getJMSMessageID()
+                        + " , Text: " + message.getText() + "]");
+                message.acknowledge();
             }
         } catch (JMSException e) {
             e.printStackTrace();
         } finally {
-            if (connection != null) {
-                try {
-                    connection.close();
-                } catch (JMSException e) {
-                    e.printStackTrace();
+            try {
+                if (session != null) {
+                    session.close();
                 }
+                if(connection != null) {
+                    connection.close();
+                }
+            } catch (JMSException e) {
+                e.printStackTrace();
             }
         }
 
@@ -62,8 +75,9 @@ public class JmsClientServlet extends HttpServlet {
         out.flush();
     }
 
-    @PostConstruct
-    private void setup() {
+    // not used anymore, using dependency injection
+    //@PostConstruct
+    /*private void setup() {
         try {
             Context context = new InitialContext();
             this.connectionFactory = (ConnectionFactory) context.lookup("jms/ConnectionFactory");
@@ -71,5 +85,5 @@ public class JmsClientServlet extends HttpServlet {
         } catch (NamingException e) {
             e.printStackTrace();
         }
-    }
+    }*/
 }
